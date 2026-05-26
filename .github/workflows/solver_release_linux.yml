@@ -1,0 +1,28 @@
+name: GitHub Actions Lab06 solver for Linux
+on:
+  push:
+    tags:
+    - v**
+permissions:
+  contents: write
+jobs: 
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository master
+      uses: actions/checkout@master
+    - name: Configure CMake for solver
+      run: cmake -S ${{github.workspace}}/ -B ${{github.workspace}}/build -D PRINT_VERSION=${GITHUB_REF_NAME#v} -D CPACK_GENERATOR="DEB;RPM"
+    - name: Build Solver
+      run: cmake --build ${{github.workspace}}/build
+    - name: Build package for solver
+      run: cmake --build ${{github.workspace}}/build --target package
+    - name: Build package source for solver
+      run: cmake --build ${{github.workspace}}/build --target package_source
+    - name: Make a release
+      uses: ncipollo/release-action@v1.21.0
+      with:
+        artifacts: "build/*.rpm,build/*.deb,build/*.tar.gz,build/*.zip"
+        replacesArtifacts: false
+        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        allowUpdates: true

@@ -1,0 +1,26 @@
+name: GitHub Actions Lab06 solver for MacOS
+on:
+  push:
+    tags:
+    - v**
+permissions:
+  contents: write
+jobs: 
+  build:
+    runs-on: macOS-latest
+    steps:
+    - name: Checkout repository master
+      uses: actions/checkout@master
+    - name: Configure CMake for solver
+      run: cmake -S ${{github.workspace}}/ -B ${{github.workspace}}/build -D PRINT_VERSION=${GITHUB_REF_NAME#v} -D CPACK_GENERATOR="DragNDrop" -D CMAKE_POLICY_VERSION_MINIMUM=3.5
+    - name: Build Solver
+      run: cmake --build ${{github.workspace}}/build
+    - name: Build package for solver
+      run: cmake --build ${{github.workspace}}/build --target package
+    - name: Make a release
+      uses: ncipollo/release-action@v1.21.0
+      with:
+        artifacts: "build/*.dmg"
+        replacesArtifacts: false
+        GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        allowUpdates: true
